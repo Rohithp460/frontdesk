@@ -20,13 +20,19 @@ reasonable interpretation.
 
 - Store timestamps as UTC `DATETIME(6)`. A naive value read from MySQL means UTC;
   it is not interpreted as Asia/Kolkata wall time.
-- Existing naive timestamps are assumed to already represent UTC; legacy rows
-  are not shifted because their historical timezone cannot be inferred safely.
+- Naive ticket/SLA/audit timestamps are interpreted as UTC. The schema migration
+  sets the customer-created timestamp default to UTC for new rows. Existing
+  customer-created timestamps are not shifted automatically because their
+  historical timezone cannot be inferred safely.
 - Convert UTC to Asia/Kolkata before determining business dates or working
   minutes.
 - A working day is Monday-Friday, 09:30 inclusive to 18:30 exclusive. An SLA
   expiring exactly at 18:30 is met at that instant; additional working time
   starts at 09:30 on the next working day.
+- “Same working day” means that a CRITICAL resolution allowance is 540 working
+  minutes, equal to one full working day. If less than that remains before
+  18:30, the unused allowance carries over to the next working day; it is not
+  a guarantee that every CRITICAL ticket resolves on its creation date.
 - Weekends and calendar rows marked holiday/non-working consume no working SLA
   time. Holiday rows are maintained by administrators outside this app.
 - Existing SLA allowances remain: CRITICAL 120 response / 540 resolution
@@ -99,6 +105,8 @@ reasonable interpretation.
 
 - No customer authentication, external notifications, scheduler, deployment,
   monitoring, or holiday-management interface is included.
+- Customer records have no API workflow and must be imported or provisioned
+  through a trusted database operation.
 - Holiday calendar records require manual maintenance.
-- The repository and live deployment URLs are not available in this workspace;
-  documentation labels both as unconfigured rather than inventing URLs.
+- The repository is https://github.com/Rohithp460/frontdesk.git. The live
+  deployment URL remains unconfigured until a Railway domain is created.

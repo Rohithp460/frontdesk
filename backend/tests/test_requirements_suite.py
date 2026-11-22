@@ -277,6 +277,7 @@ def test_6_ticket_autocloses_after_5_working_days_without_customer_reply(
         ticket = Ticket(
             public_ref=unique_ref("INC-AC"),
             title="Auto close test",
+            description="Ticket created for the auto-close threshold test.",
             customer_id=shared_customer_id,
             priority=TicketPriority.medium,
             status=TicketStatus.pending,
@@ -320,6 +321,7 @@ def test_7_resolved_ticket_reopened_within_5_working_days(
         ticket = Ticket(
             public_ref=unique_ref("INC-RO7"),
             title="Reopen within window",
+            description="Ticket created for the reopen-window test.",
             customer_id=shared_customer_id,
             priority=TicketPriority.medium,
             status=TicketStatus.resolved,

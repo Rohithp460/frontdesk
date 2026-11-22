@@ -6,8 +6,8 @@ import { useAuth } from '../context/AuthContext';
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [email, setEmail] = useState('meera@arvo.example');
-  const [password, setPassword] = useState('Admin@1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,14 +88,6 @@ export const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-slate-100">
-          <p className="text-xs text-slate-500 mb-2 font-medium">Demo seed accounts:</p>
-          <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200 font-mono">
-            <div>meera@arvo.example / Admin@1234</div>
-            <div>priya@arvo.example / Agent@1234</div>
-            <div>arjun@arvo.example / Agent@1234</div>
-          </div>
-        </div>
       </div>
     </div>
   );

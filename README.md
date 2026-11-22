@@ -7,7 +7,7 @@ team-only notes, SLA deadlines, and an append-only ticket timeline.
 ## Project links
 
 - **Live URL:** Not deployed.
-- **Repository URL:** Not published/provided for this workspace.
+- **Repository URL:** <https://github.com/Rohithp460/frontdesk.git>
 
 ## Tech stack
 
@@ -114,6 +114,8 @@ use. Production must supply:
 `VITE_API_BASE_URL` is the frontend API origin, without `/api/v1`. Docker passes
 it as a frontend build argument; rebuild the frontend image after changing it.
 Never deploy with the development-only generated JWT secret or demo passwords.
+Production startup requires `DATABASE_URL`, a strong `JWT_SECRET`, and explicit
+HTTPS `CORS_ORIGINS`. The frontend login page does not contain demo credentials.
 
 ## Migrations and seed data
 
@@ -141,6 +143,16 @@ Demo credentials (local development only):
 Do not seed these credentials into production; create unique accounts and
 rotate/remove any demo accounts.
 
+For the first production account, run `scripts/seed.py` once with
+`ENVIRONMENT=production`, `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, and
+`FRONTDESK_BOOTSTRAP_NAME`, `FRONTDESK_BOOTSTRAP_EMAIL`, and
+`FRONTDESK_BOOTSTRAP_PASSWORD` set in the execution environment. Optionally set
+`FRONTDESK_BOOTSTRAP_ROLE=AGENT`; it defaults to `ADMIN`. The production seed
+creates only the explicitly supplied account and skips an existing email.
+Remove the bootstrap password variable after use. Customer records must be
+imported or inserted through a trusted database operation; there is no customer
+management API.
+
 ## API overview
 
 The same API routers are available under `/api/v1` and at the root for local
@@ -155,34 +167,36 @@ compatibility. Main endpoints include:
 
 See Swagger at `/docs` for request/response schemas and filters.
 
-## Docker and deployment
+## Railway deployment
 
-For production, deploy on a Linux VPS with Docker Engine/Compose and a
-TLS-terminating reverse proxy. Before starting:
+Deploy three Railway services: MySQL, backend, and frontend. Do not use
+development Compose credentials in Railway.
 
-1. Create a private `backend/.env` with `ENVIRONMENT=production`, a generated
-   `JWT_SECRET` (for example `openssl rand -hex 32`), production
-   `CORS_ORIGINS`, and database settings.
-2. Set Compose interpolation variables in the deployment environment (or a
-   protected root `.env`): `MYSQL_DB`, `MYSQL_USER`, `MYSQL_PASSWORD`,
-   `MYSQL_ROOT_PASSWORD`, `DATABASE_URL`, and `VITE_API_BASE_URL`.
-3. Configure `DATABASE_URL` to use the Compose MySQL service name, and ensure
-   the MySQL container uses the same database/user/password values.
-4. Configure `VITE_API_BASE_URL` to the public API origin and rebuild images:
+1. Create a Railway MySQL service and use its private connection URL as the
+   backend `DATABASE_URL`.
+2. Deploy the backend from the repository with root directory `backend` and
+   its Dockerfile. Configure `ENVIRONMENT=production`, a generated
+   `JWT_SECRET` (`openssl rand -hex 32`), `DATABASE_URL`, and
+   `CORS_ORIGINS`. The backend entrypoint applies Alembic migrations before
+   starting Uvicorn and listens on Railway's `PORT`.
+3. Deploy the frontend with root directory `frontend` and its Dockerfile.
+   Provide `VITE_API_BASE_URL` at build time as the backend's public HTTPS
+   origin, without `/api/v1`. The Nginx service listens on port 80.
+4. Generate Railway HTTPS domains for the frontend and backend. Set backend
+   `CORS_ORIGINS` to the exact frontend origin, then redeploy the backend.
+5. Bootstrap an admin once using the production seed environment variables
+   described above. Import real customer records through a trusted database
+   operation before creating tickets.
+6. Configure backups and a Railway scheduled job if automatic response-SLA
+   checks and auto-close are required. No scheduler is included in this app.
 
-   ```bash
-   docker compose build
-   docker compose up -d
-   ```
+The backend Docker build excludes local `.env` files. Store all production
+secrets in Railway Variables, never in the repository or container build
+context. Verify `/health` after deployment. The live URL remains unconfigured
+until Railway generates the production domain.
 
-5. Restrict MySQL port 3306 from public access. Put the frontend and API behind
-   HTTPS, configure the proxy routes, and back up the MySQL volume.
-6. Configure a production scheduler to call the admin SLA-check and auto-close
-   endpoints with protected admin credentials; no scheduler is included.
-
-The checked-in Compose settings are for local development, not a fully managed
-production deployment. Secret management, TLS proxy configuration, monitoring,
-and database backups must be supplied by the deployment environment.
+Docker Compose remains a local-development option. Its default database
+credentials are development-only.
 
 ## Tests
 
@@ -198,9 +212,11 @@ npm run build
 
 ## Known limitations and unfinished work
 
-- No live deployment or public repository URL is configured.
+- No live deployment URL is configured yet.
 - The customer-reply and reopen routes are demo-only agent-authenticated
   simulations; there is no customer login or inbound email integration.
+- Customer creation/import is an operational database task; no customer
+  management endpoint is included.
 - Auto-close and response-SLA expiration require an external scheduler in
   production.
 - Holiday dates must be maintained in the business calendar.

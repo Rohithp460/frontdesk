@@ -33,11 +33,43 @@ def test_invalid_jwt_is_rejected():
 
 def test_production_settings_reject_missing_or_insecure_jwt_secret():
     with pytest.raises(ValueError):
-        Settings(ENVIRONMENT="production", JWT_SECRET=None)
+        Settings(
+            ENVIRONMENT="production",
+            JWT_SECRET=None,
+            DATABASE_URL="mysql+pymysql://frontdesk:secret@db.railway.internal:3306/frontdesk",
+            CORS_ORIGINS=["https://frontdesk.example"],
+        )
     with pytest.raises(ValueError):
-        Settings(ENVIRONMENT="production", JWT_SECRET="a" * 64)
+        Settings(
+            ENVIRONMENT="production",
+            JWT_SECRET="a" * 64,
+            DATABASE_URL="mysql+pymysql://frontdesk:secret@db.railway.internal:3306/frontdesk",
+            CORS_ORIGINS=["https://frontdesk.example"],
+        )
     configured = Settings(
         ENVIRONMENT="production",
         JWT_SECRET="e8d1352f4d0ca3bfed3f0189759ab1bd035d4889417811d929c8897cfbaf8a4c",
+        DATABASE_URL="mysql://frontdesk:secure-password@db.railway.internal:3306/frontdesk",
+        CORS_ORIGINS=["https://frontdesk.example"],
     )
     assert configured.jwt_secret.startswith("e8d")
+    assert configured.sync_database_url.startswith("mysql+pymysql://")
+
+
+def test_production_settings_reject_missing_or_insecure_database_and_cors():
+    common = {
+        "ENVIRONMENT": "production",
+        "JWT_SECRET": "e8d1352f4d0ca3bfed3f0189759ab1bd035d4889417811d929c8897cfbaf8a4c",
+        "CORS_ORIGINS": ["https://frontdesk.example"],
+    }
+    with pytest.raises(ValueError, match="DATABASE_URL is required"):
+        Settings(**common)
+    with pytest.raises(ValueError, match="remote MySQL host"):
+        Settings(**common, DATABASE_URL="mysql+pymysql://frontdesk:frontdesk_password@db.railway.internal/frontdesk")
+    with pytest.raises(ValueError, match="remote MySQL host"):
+        Settings(**common, DATABASE_URL="mysql+pymysql://frontdesk:secret@localhost/frontdesk")
+    with pytest.raises(ValueError, match="HTTPS origins"):
+        Settings(
+            **{**common, "CORS_ORIGINS": ["http://localhost:5173"]},
+            DATABASE_URL="mysql+pymysql://frontdesk:secret@db.railway.internal/frontdesk",
+        )

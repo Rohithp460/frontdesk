@@ -2,6 +2,8 @@ import secrets
 from typing import List, Union
 from pydantic import PrivateAttr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 
 class Settings(BaseSettings):
@@ -45,6 +47,31 @@ class Settings(BaseSettings):
                 or any(marker in lowered for marker in ("changeme", "replace", "example", "development", "your-secret"))
             ):
                 raise ValueError("A strong JWT_SECRET of at least 32 characters is required in production")
+            if not self.DATABASE_URL:
+                raise ValueError("DATABASE_URL is required in production")
+            try:
+                database_url = make_url(self.DATABASE_URL)
+            except (ArgumentError, ValueError) as exc:
+                raise ValueError("DATABASE_URL must be a valid MySQL URL") from exc
+            if (
+                database_url.drivername not in {"mysql", "mysql+pymysql"}
+                or not database_url.host
+                or database_url.host.lower() in {"localhost", "127.0.0.1"}
+                or not database_url.password
+                or database_url.password.lower()
+                in {"frontdesk_password", "root_password", "password", "changeme"}
+            ):
+                raise ValueError(
+                    "Production DATABASE_URL must use a remote MySQL host and a non-default password"
+                )
+            origins = [origin.rstrip("/") for origin in self.CORS_ORIGINS]
+            if not origins or any(
+                origin == "*" or not origin.startswith("https://")
+                for origin in origins
+            ):
+                raise ValueError(
+                    "Production CORS_ORIGINS must contain explicit HTTPS origins"
+                )
         return self
 
     @property
@@ -67,7 +94,10 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         if self.DATABASE_URL:
-            return self.DATABASE_URL
+            database_url = make_url(self.DATABASE_URL)
+            if database_url.drivername == "mysql":
+                database_url = database_url.set(drivername="mysql+pymysql")
+            return database_url.render_as_string(hide_password=False)
         return (
             f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
             f"@{self.MYSQL_SERVER}:{self.MYSQL_PORT}/{self.MYSQL_DB}"
