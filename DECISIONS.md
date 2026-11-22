@@ -103,10 +103,11 @@ reasonable interpretation.
 
 ## Known limitations
 
-- No customer authentication, external notifications, scheduler, deployment,
-  monitoring, or holiday-management interface is included.
+- No customer authentication, external notifications, scheduler, monitoring,
+  or holiday-management interface is included.
 - Customer records have no API workflow and must be imported or provisioned
   through a trusted database operation.
 - Holiday calendar records require manual maintenance.
 - The repository is https://github.com/Rohithp460/frontdesk.git. The live
-  deployment URL remains unconfigured until a Railway domain is created.
+  frontend is https://frontend-production-69c3eb94.up.railway.app and the API
+  is https://backend-production-cf143c6d.up.railway.app.

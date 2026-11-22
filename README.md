@@ -6,7 +6,9 @@ team-only notes, SLA deadlines, and an append-only ticket timeline.
 
 ## Project links
 
-- **Live URL:** Not deployed.
+- **Live URL:** <https://frontend-production-69c3eb94.up.railway.app>
+- **API URL:** <https://backend-production-cf143c6d.up.railway.app>
+- **API docs:** <https://backend-production-cf143c6d.up.railway.app/docs>
 - **Repository URL:** <https://github.com/Rohithp460/frontdesk.git>
 
 ## Tech stack
@@ -108,7 +110,7 @@ use. Production must supply:
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime |
 | `DATABASE_URL` | SQLAlchemy URL for MySQL |
 | `MYSQL_SERVER`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DB` | MySQL connection settings when `DATABASE_URL` is unset |
-| `CORS_ORIGINS` | JSON array or comma-separated browser origins; set production domains explicitly |
+| `CORS_ORIGINS` | JSON array of browser origins; set the exact production frontend origin |
 | `PROJECT_NAME` | API title |
 
 `VITE_API_BASE_URL` is the frontend API origin, without `/api/v1`. Docker passes
@@ -149,9 +151,10 @@ For the first production account, run `scripts/seed.py` once with
 `FRONTDESK_BOOTSTRAP_PASSWORD` set in the execution environment. Optionally set
 `FRONTDESK_BOOTSTRAP_ROLE=AGENT`; it defaults to `ADMIN`. The production seed
 creates only the explicitly supplied account and skips an existing email.
-Remove the bootstrap password variable after use. Customer records must be
-imported or inserted through a trusted database operation; there is no customer
-management API.
+In Railway, run `python /app/scripts/seed.py` from the backend service Console.
+Remove all `FRONTDESK_BOOTSTRAP_*` variables after use. Customer records must
+be imported or inserted through a trusted database operation; there is no
+customer management API.
 
 ## API overview
 
@@ -192,8 +195,8 @@ development Compose credentials in Railway.
 
 The backend Docker build excludes local `.env` files. Store all production
 secrets in Railway Variables, never in the repository or container build
-context. Verify `/health` after deployment. The live URL remains unconfigured
-until Railway generates the production domain.
+context. Verify `/health` after deployment. The current live endpoints are
+listed under Project links above.
 
 Docker Compose remains a local-development option. Its default database
 credentials are development-only.
@@ -212,7 +215,6 @@ npm run build
 
 ## Known limitations and unfinished work
 
-- No live deployment URL is configured yet.
 - The customer-reply and reopen routes are demo-only agent-authenticated
   simulations; there is no customer login or inbound email integration.
 - Customer creation/import is an operational database task; no customer
