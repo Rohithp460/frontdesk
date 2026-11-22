@@ -37,7 +37,7 @@ def upgrade() -> None:
             "updated_at",
             mysql.DATETIME(fsp=6),
             nullable=False,
-            server_default=sa.text("UTC_TIMESTAMP(6)"),
+            server_default=sa.text("(UTC_TIMESTAMP(6))"),
         ),
     )
     op.execute("ALTER TABLE agents MODIFY role VARCHAR(20) NOT NULL DEFAULT 'AGENT'")
@@ -120,16 +120,17 @@ def upgrade() -> None:
             "created_at",
             mysql.DATETIME(fsp=6),
             nullable=False,
-            server_default=sa.text("UTC_TIMESTAMP(6)"),
+            server_default=sa.text("(UTC_TIMESTAMP(6))"),
         ),
     )
 
     op.execute(
-        "ALTER TABLE agents MODIFY created_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6), "
-        "MODIFY updated_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6)"
+        "ALTER TABLE agents "
+        "MODIFY created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)), "
+        "MODIFY updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6))"
     )
     op.execute(
         "ALTER TABLE ticket_events "
-        "MODIFY occurred_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6), "
-        "MODIFY created_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6)"
+        "MODIFY occurred_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)), "
+        "MODIFY created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6))"
     )

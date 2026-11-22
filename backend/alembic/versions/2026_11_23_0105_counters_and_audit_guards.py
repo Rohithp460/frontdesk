@@ -65,14 +65,14 @@ def upgrade() -> None:
         "MODIFY response_deadline DATETIME(6) NULL, "
         "MODIFY resolution_deadline DATETIME(6) NULL, "
         "MODIFY reopened_until DATETIME(6) NULL, "
-        "MODIFY created_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6), "
-        "MODIFY updated_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6)"
+        "MODIFY created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)), "
+        "MODIFY updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6))"
     )
     op.execute(
         "ALTER TABLE ticket_wait_periods "
-        "MODIFY started_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6), "
+        "MODIFY started_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)), "
         "MODIFY ended_at DATETIME(6) NULL, "
-        "MODIFY created_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6)"
+        "MODIFY created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6))"
     )
 
 
