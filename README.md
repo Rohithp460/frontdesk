@@ -156,6 +156,20 @@ Remove all `FRONTDESK_BOOTSTRAP_*` variables after use. Customer records must
 be imported or inserted through a trusted database operation; there is no
 customer management API.
 
+### Current Railway demo data
+
+The live Railway database currently contains three synthetic customers and
+five `DEMO:` tickets, plus two active `AGENT` test accounts. This dataset was
+added manually for production testing; it is not created by the standard seed
+script and is not automatically recreated in other environments. The demo
+customer email addresses use the reserved `.test` domain and cannot receive
+email.
+
+The demo tickets are assigned to the admin account initially. Agents can view
+them, but assigned-agent actions require a ticket to be assigned to that agent.
+Production account passwords are intentionally not stored in this repository;
+share credentials privately and disable or rotate test accounts after testing.
+
 ## API overview
 
 The same API routers are available under `/api/v1` and at the root for local
