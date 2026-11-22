@@ -49,10 +49,11 @@ def upgrade() -> None:
             mysql_collate="utf8mb4_unicode_ci",
         )
     op.execute(
-        "INSERT INTO ticket_counters (name, last_value) "
+            "INSERT INTO ticket_counters (`name`, `last_value`) "
         "SELECT 'ticket', COALESCE(MAX(CAST(SUBSTRING(public_ref, 5) AS UNSIGNED)), 0) "
         "FROM tickets WHERE public_ref REGEXP '^INC-[0-9]+$' "
-        "ON DUPLICATE KEY UPDATE last_value = GREATEST(last_value, VALUES(last_value))"
+            "ON DUPLICATE KEY UPDATE `last_value` = "
+            "GREATEST(`last_value`, VALUES(`last_value`))"
     )
     _replace_fk("ticket_events", "ticket_id", "tickets")
     _replace_fk("ticket_wait_periods", "ticket_id", "tickets")
