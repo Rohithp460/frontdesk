@@ -7,6 +7,8 @@ Revises: b48277d7a7ac
 from typing import Sequence, Union
 
 from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import mysql
 
 
 revision: str = "20261122_phase8"
@@ -15,11 +17,28 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _add_column_if_missing(table_name: str, column: sa.Column) -> None:
+    columns = {
+        column_info["name"]
+        for column_info in sa.inspect(op.get_bind()).get_columns(table_name)
+    }
+    if column.name not in columns:
+        op.add_column(table_name, column)
+
+
 def upgrade() -> None:
-    op.execute(
-        "ALTER TABLE agents "
-        "ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE AFTER hashed_password, "
-        "ADD COLUMN IF NOT EXISTS updated_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6) AFTER created_at"
+    _add_column_if_missing(
+        "agents",
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("1")),
+    )
+    _add_column_if_missing(
+        "agents",
+        sa.Column(
+            "updated_at",
+            mysql.DATETIME(fsp=6),
+            nullable=False,
+            server_default=sa.text("UTC_TIMESTAMP(6)"),
+        ),
     )
     op.execute("ALTER TABLE agents MODIFY role VARCHAR(20) NOT NULL DEFAULT 'AGENT'")
     op.execute("UPDATE agents SET role = 'ADMIN' WHERE role = 'admin'")
@@ -50,20 +69,22 @@ def upgrade() -> None:
         "ENUM('OPEN','WAITING_CUSTOMER','RESOLVED','CLOSED') "
         "NOT NULL DEFAULT 'OPEN'"
     )
-    op.execute(
-        "ALTER TABLE tickets "
-        "ADD COLUMN IF NOT EXISTS response_sla_met BOOLEAN NULL, "
-        "ADD COLUMN IF NOT EXISTS resolution_sla_met BOOLEAN NULL, "
-        "ADD COLUMN IF NOT EXISTS reopened_from_ticket_id INTEGER NULL"
+    _add_column_if_missing(
+        "tickets", sa.Column("response_sla_met", sa.Boolean(), nullable=True)
+    )
+    _add_column_if_missing(
+        "tickets", sa.Column("resolution_sla_met", sa.Boolean(), nullable=True)
+    )
+    _add_column_if_missing(
+        "tickets", sa.Column("reopened_from_ticket_id", sa.Integer(), nullable=True)
     )
     op.execute(
         "UPDATE tickets SET reopened_from_ticket_id = NULL "
         "WHERE reopened_from_ticket_id IS NULL"
     )
 
-    op.execute(
-        "ALTER TABLE ticket_events "
-        "ADD COLUMN IF NOT EXISTS actor_name VARCHAR(255) NULL AFTER actor_id"
+    _add_column_if_missing(
+        "ticket_events", sa.Column("actor_name", sa.String(length=255), nullable=True)
     )
     op.execute("ALTER TABLE ticket_events MODIFY actor_type VARCHAR(20) NOT NULL")
     op.execute("UPDATE ticket_events SET actor_type = 'AGENT' WHERE actor_type = 'agent'")
@@ -93,9 +114,14 @@ def upgrade() -> None:
         "'AUTO_CLOSED_DUE_TO_CUSTOMER_INACTIVITY','SLA_DEADLINE_RECALCULATED'"
         ") NOT NULL"
     )
-    op.execute(
-        "ALTER TABLE ticket_wait_periods "
-        "ADD COLUMN IF NOT EXISTS created_at DATETIME(6) NOT NULL DEFAULT UTC_TIMESTAMP(6)"
+    _add_column_if_missing(
+        "ticket_wait_periods",
+        sa.Column(
+            "created_at",
+            mysql.DATETIME(fsp=6),
+            nullable=False,
+            server_default=sa.text("UTC_TIMESTAMP(6)"),
+        ),
     )
 
     op.execute(
