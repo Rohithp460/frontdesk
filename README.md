@@ -14,10 +14,8 @@ team-only notes, SLA deadlines, and an append-only ticket timeline.
 Demo credentials:
 
 - Admin: `rohithp460@gmail.com` / `jUZkXDØy3wSLMR1383D0mdUkv-xAelfr`
-- Agent: `demo. agent1@example
-•test` / `SVTbJG9mCW2p7fpNX_9TAwLMgwtwy-rR`
-- Agent: `demo. agent2@example
-•` / `KGØH7BFJqho3FB4qwgW-kNhC09GbZGQ-`
+- Agent: `demo.agent1@example•test` / `SVTbJG9mCW2p7fpNX_9TAwLMgwtwy-rR`
+- Agent: `demo.agent2@example•test` / `KGØH7BFJqho3FB4qwgW-kNhC09GbZGQ-`
 ## Tech stack
 
 - React, Vite, TypeScript, Tailwind CSS, Axios, and React Router
